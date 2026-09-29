@@ -1,0 +1,23 @@
+# Runtime dependencies (pinned). All are free/open-source; see THIRD_PARTY_NOTICES.md.
+# Tested with Python 3.11 (Linux, automated tests). Target: Python 3.12 64-bit on Windows 10/11.
+fastapi==0.141.1
+starlette==1.7.0
+pydantic==2.13.5
+pydantic_core==2.46.5
+annotated-types==0.8.0
+annotated-doc==0.0.5
+typing_extensions==4.16.0
+typing-inspection==0.4.4
+anyio==4.15.1
+idna==3.20
+uvicorn==0.54.0
+h11==0.16.0
+click==8.5.0
+colorama==0.4.6 ; sys_platform == "win32"
+python-multipart==0.0.32
+openpyxl==3.1.5
+et_xmlfile==2.0.0
+pillow==12.3.0
+pypdfium2==5.13.0
+tzdata==2026.4
+pywin32==312 ; sys_platform == "win32"
