@@ -57,7 +57,7 @@ list; missing photos list.
   saved 6 photos, dry-run send ..., backup ..."). On that runner (no Outlook installed) the
   Outlook check correctly reported: "Classic Outlook is not installed on this computer ...".
   The zipped build is uploaded as the `RelayEmployeeHub-windows` artifact (kept 30 days).
-  The runner has no interactive desktop, so the browser launch, shortcuts and tray/logon
+  The runner has no interactive desktop, so the browser launch, desktop shortcut and logon-startup
   behaviour were not exercised there.
 
 ## 4. Not run in this environment (see WINDOWS_MANUAL_CHECKLIST.md)
