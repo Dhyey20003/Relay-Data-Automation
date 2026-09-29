@@ -48,10 +48,17 @@ list; missing photos list.
   app starts, serves the UI, processes PDFs and XLSX, and a second launch detects the
   running copy. `scripts/smoke_test_server.py` passed against it (roster import of 50,
   6 photos saved, dry-run HR send, verified backup).
-- **Windows** build: the GitHub Actions workflow `.github/workflows/windows-build.yml`
-  runs the test suite on Windows, builds `RelayEmployeeHub.exe` and runs the same smoke
-  test against it. See the result of that run for this commit; the Windows executable was
-  not built or run inside this development environment.
+- **Windows** build (GitHub Actions `windows-latest`, Python 3.12.10, runs
+  [#1](https://github.com/Dhyey20003/Relay-Data-Automation/actions/runs/36614217738) and
+  [#2](https://github.com/Dhyey20003/Relay-Data-Automation/actions/runs/36614349299), both successful):
+  the automated test suite passed on Windows; PyInstaller built `RelayEmployeeHub.exe`
+  (pywin32/pythoncom hooks included); the packaged exe was started with a fresh data folder
+  and `scripts/smoke_test_server.py` passed against it ("SMOKE TEST PASSED: imported 50,
+  saved 6 photos, dry-run send ..., backup ..."). On that runner (no Outlook installed) the
+  Outlook check correctly reported: "Classic Outlook is not installed on this computer ...".
+  The zipped build is uploaded as the `RelayEmployeeHub-windows` artifact (kept 30 days).
+  The runner has no interactive desktop, so the browser launch, shortcuts and tray/logon
+  behaviour were not exercised there.
 
 ## 4. Not run in this environment (see WINDOWS_MANUAL_CHECKLIST.md)
 
