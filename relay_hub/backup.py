@@ -128,23 +128,24 @@ def create_backup(conn, paths, kind: str, actor: str, dest: Path | None = None) 
                     instance = sconn.execute("SELECT value FROM meta WHERE key='instance_id'").fetchone()
                 finally:
                     sconn.close()
+                # A photo referenced by the database but missing on disk must not prevent a backup
+                # (a restore may be exactly how it gets fixed); it is recorded as a warning instead.
                 missing = [p for p in referenced if f"images/{p}" not in files]
-                if missing:
-                    raise BackupError(f"{len(missing)} photo file(s) referenced by the database are missing from "
-                                      f"storage (for example images/{missing[0]}).")
                 manifest = {"format": FORMAT, "format_version": 1, "app_version": __version__,
                             "schema_version": int(schema[0]) if schema else None,
                             "instance_id": instance[0] if instance else None, "kind": kind,
                             "created_at": timeutil.iso_utc(), "created_by": actor, "hostname": socket.gethostname(),
-                            "file_count": len(files), "files": files}
+                            "file_count": len(files), "missing_photos": missing, "files": files}
                 zf.writestr(MANIFEST, json.dumps(manifest, indent=1))
         os.replace(partial, final)
         info = verify_backup(final, paths)
         size = final.stat().st_size
         digest = _sha256(final)
         with db.transaction(conn):
-            conn.execute("UPDATE backups SET status='verified', size=?, sha256=?, file_count=?, verified_at=? "
-                         "WHERE id=?", (size, digest, info["file_count"], timeutil.iso_utc(), bid))
+            warning = (f"Warning: {len(missing)} photo file(s) were missing from storage and are not in this "
+                       f"backup (for example images/{missing[0]})." if missing else None)
+            conn.execute("UPDATE backups SET status='verified', size=?, sha256=?, file_count=?, verified_at=?, "
+                         "error=? WHERE id=?", (size, digest, info["file_count"], timeutil.iso_utc(), warning, bid))
             audit.log(conn, actor, "backup.create", "backup", bid, f"{kind.capitalize()} backup {final.name} created "
                       f"and verified ({size / 1048576:.1f} MB)", {"path": str(final)})
         apply_retention(conn, paths)

@@ -268,6 +268,7 @@ def test_scheduler_auto_sends_once_enabled_and_is_restart_safe(env):
     assert r.status_code == 422, "explicit confirmation required"
     from relay_hub.context import Scheduler
     sched = Scheduler(env.ctx)
+    sched._last_purge = 1e12  # the frozen future clock would otherwise purge the test session
     timeutil.freeze(dt.datetime(2026, 10, 1, 5, 0, tzinfo=dt.timezone.utc))  # 10:30 IST
     sched.tick()
     with env.conn() as conn:
@@ -314,6 +315,7 @@ def test_backlog_and_overdue_are_held_for_review(env):
     env.api.post(f"/api/tasks/{tid}/auto-send", {"enable": True, "confirm": True})
     from relay_hub.context import Scheduler
     sched = Scheduler(env.ctx)
+    sched._last_purge = 1e12  # the frozen future clock would otherwise purge the test session
     # Application was off for six weeks: three periods became due.
     timeutil.freeze(dt.datetime(2026, 11, 10, 5, 0, tzinfo=dt.timezone.utc))
     sched.tick()

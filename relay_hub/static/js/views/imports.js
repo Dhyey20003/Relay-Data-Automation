@@ -99,15 +99,15 @@ async function drawStep2(templateToApply) {
   }
   w.config = cfg;
 
-  const sheetSel = h('select', { onchange: (e) => { w.sheet = e.target.value; drawStep2(); } }, ins.sheets.map((s) => h('option', { value: s }, s)));
+  const sheetSel = h('select', { onchange: (e) => { if (e.target.value === w.sheet) return; w.sheet = e.target.value; setTimeout(() => drawStep2(), 0); } }, ins.sheets.map((s) => h('option', { value: s }, s)));
   sheetSel.value = ins.sheet;
-  const headerInput = h('input', { type: 'number', min: 1, max: 25, value: ins.header_row, style: { width: '80px' }, onchange: (e) => { w.headerRow = Number(e.target.value) || 1; drawStep2(); } });
+  const headerInput = h('input', { type: 'number', min: 1, max: 25, value: ins.header_row, style: { width: '80px' }, onchange: (e) => { const v = Number(e.target.value) || 1; if (v === w.headerRow) return; w.headerRow = v; setTimeout(() => drawStep2(), 0); } });
   const tplSel = h('select', { onchange: (e) => { const t = w.templates.find((x) => String(x.id) === e.target.value); if (t) drawStep2(t); } },
     h('option', { value: '' }, w.templates.length ? 'Apply a saved template...' : 'No saved templates yet'), w.templates.map((t) => h('option', { value: t.id }, `${t.name} (${w.meta.purposes[t.purpose]})`)));
   if (cfg.template_id) tplSel.value = String(cfg.template_id);
 
   const purpose = purposeSelect(cfg.purpose);
-  purpose.addEventListener('change', () => { cfg.purpose = purpose.value; w.purpose = purpose.value; drawStep2(); });
+  purpose.addEventListener('change', () => { if (cfg.purpose === purpose.value) return; cfg.purpose = purpose.value; w.purpose = purpose.value; setTimeout(() => drawStep2(), 0); });
 
   // Preview of the raw sheet with the header row highlighted.
   const rawTable = h('div', { class: 'table-wrap', style: { maxHeight: '220px' } }, h('table', { class: 'simple sheet-preview' },
@@ -389,7 +389,7 @@ async function renderSamples(main) {
   try { [samples, templates] = await Promise.all([get('/api/samples'), get('/api/import-templates')]); } catch (e) { mount(main, notice('error', errorText(e))); return; }
   mount(main,
     h('div', { class: 'card' }, h('h2', 'Sample files'), h('p', { class: 'muted' }, 'Synthetic example files showing the expected layout. They contain made-up people only.'),
-      h('ul', samples.map((s) => h('li', h('a', { href: '#', onclick: (e) => { e.preventDefault(); download(`/api/samples/${s.name}`, undefined, s.name).catch(showError); } }, s.name), ` — ${s.description}`)))),
+      h('ul', samples.map((s) => h('li', h('a', { href: '#', onclick: (e) => { e.preventDefault(); download(`/api/samples/${s.name}`, undefined, s.name).catch(showError); } }, s.name), `: ${s.description}`)))),
     h('div', { class: 'card' }, h('h2', 'Saved mapping templates'),
       templates.length ? h('div', { class: 'table-wrap' }, h('table', { class: 'simple' }, h('thead', h('tr', h('th', 'Name'), h('th', 'Purpose'), h('th', 'Mapped columns'), h('th', 'Updated'), h('th', ''))),
         h('tbody', templates.map((t) => h('tr', h('td', t.name), h('td', t.purpose), h('td', { class: 'small' }, Object.entries(t.mapping).filter(([, v]) => v).map(([k, v]) => `${k} → ${v}`).join(', ')),

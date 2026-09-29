@@ -530,7 +530,7 @@ export async function openProfile(id) {
   for (const f of fields) {
     if (f.key === 'photo') continue;
     const v = emp[f.key];
-    kv.append(h('dt', f.label), h('dd', f.key === 'bench_days' && v !== null && v !== undefined ? `${v} day(s)` : fmtValue(f, v) || h('span', { class: 'faint' }, '—')));
+    kv.append(h('dt', f.label), h('dd', f.key === 'bench_days' && v !== null && v !== undefined ? `${v} day(s)` : fmtValue(f, v) || h('span', { class: 'faint' }, 'none')));
   }
   const actions = h('div', { class: 'row' });
   if (can('employees.edit')) actions.appendChild(h('button', { class: 'primary', onclick: () => { m.close(); openForm(emp, () => openProfile(id)); } }, 'Edit'));

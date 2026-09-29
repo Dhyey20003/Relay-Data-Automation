@@ -68,12 +68,12 @@ function taskCard(t) {
     !inclusion ? notice('warn', 'Choose and save an inclusion rule (all active employees, or only new/changed headshots) in Configure before this task can run.') : null,
     h('dl', { class: 'kv' },
       h('dt', 'Schedule'), h('dd', scheduleText(t)),
-      h('dt', 'Next due'), h('dd', t.upcoming.length ? t.upcoming.map((u) => fmtDateTime(u.due_at)).join(' · ') : '—'),
+      h('dt', 'Next due'), h('dd', t.upcoming.length ? t.upcoming.map((u) => fmtDateTime(u.due_at)).join(' · ') : 'none'),
       h('dt', 'Include'), h('dd', inclusion || h('span', { class: 'field-error' }, 'not chosen yet')),
       h('dt', 'Locations'), h('dd', t.locations.join(', ') + ' (one ZIP per location, both attached to one email)'),
       h('dt', 'File names'), h('dd', t.kind === 'HR' ? 'RHC ID, converted to JPG (for example RHC1234.jpg)' : `${t.naming_template}${t.export_format === 'jpg' ? ' (converted to JPG)' : ' (original format)'}; duplicates get _<RHC ID>`),
       h('dt', 'Recipients'), h('dd', t.email.to && t.email.to.length ? `To: ${t.email.to.join(', ')}${t.email.cc && t.email.cc.length ? ` · CC: ${t.email.cc.join(', ')}` : ''}` : h('span', { class: 'field-error' }, 'none configured')),
-      h('dt', 'Last completed'), h('dd', t.last_completed ? `${t.last_completed.period_label} (${t.last_completed.status})` : '—'),
+      h('dt', 'Last completed'), h('dd', t.last_completed ? `${t.last_completed.period_label} (${t.last_completed.status})` : 'none'),
       t.auto_send_enabled && t.auto_send_blockers.length ? [h('dt', 'Automatic sending'), h('dd', { class: 'field-error' }, t.auto_send_blockers.join(' '))] : null),
     h('h3', 'Periods'), periodsBox);
 }
@@ -157,7 +157,7 @@ function openAutoSend(t) {
     h('p', 'When on, each due period is prepared and sent through classic Outlook without asking, as long as:'),
     h('ul', h('li', 'the application is running on this computer and you are signed in to Windows;'), h('li', 'the packages are complete (unless you allowed exclusions) and within the size limit;'),
       h('li', 'the period is not a backlog (several missed periods are always held for review);'), h('li', 'no earlier send for the period is uncertain (uncertain sends are never retried).')),
-    h('dl', { class: 'kv' }, h('dt', 'To'), h('dd', (t.email.to || []).join(', ') || h('span', { class: 'field-error' }, 'no recipients')), h('dt', 'CC'), h('dd', (t.email.cc || []).join(', ') || '—'),
+    h('dl', { class: 'kv' }, h('dt', 'To'), h('dd', (t.email.to || []).join(', ') || h('span', { class: 'field-error' }, 'no recipients')), h('dt', 'CC'), h('dd', (t.email.cc || []).join(', ') || 'none'),
       h('dt', 'From'), h('dd', t.email.sender || 'default Outlook account')),
     h('label', { class: 'field inline' }, confirmBox, 'I have checked the recipients and sender, and routine emails for this task may be sent automatically.')),
   actions: [h('button', { onclick: () => m.close() }, 'Cancel'), btnOff, btnOn].filter(Boolean) });
@@ -279,7 +279,7 @@ function packageCard(pk) {
       h('dt', 'Excluded'), h('dd', pk.omitted_count),
       pk.inclusion === 'changed' ? [h('dt', 'Unchanged (not included)'), h('dd', pk.unchanged)] : null,
       h('dt', 'Prepared'), h('dd', `${fmtDateTime(pk.created_at)} by ${pk.created_by}`),
-      h('dt', 'SHA-256'), h('dd', { class: 'mono small' }, pk.zip_sha256 ? pk.zip_sha256.slice(0, 24) + '…' : '—')),
+      h('dt', 'SHA-256'), h('dd', { class: 'mono small' }, pk.zip_sha256 ? pk.zip_sha256.slice(0, 24) + '…' : 'none')),
     pk.exclusions.length ? h('details', { open: pk.exclusions.length <= 5 }, h('summary', h('b', `Exclusions (${pk.exclusions.length})`)),
       h('ul', { class: 'change-list' }, pk.exclusions.map((x) => h('li', `${x.full_name} (${x.rhc_id || 'no RHC ID'}): ${x.reason}`)))) : null,
     pk.renamed.length ? h('details', h('summary', `Duplicate file names resolved (${pk.renamed.length})`), h('ul', { class: 'change-list' }, pk.renamed.map((x) => h('li', `${x.renamed_from} → ${x.exported_filename}`)))) : null,
@@ -294,7 +294,7 @@ async function emailPreview(periodId) {
   try { e = await get(`/api/periods/${periodId}/email-preview`); } catch (err) { showError(err); return; }
   modal({ title: 'Email preview', size: 'wide', body: h('div', { class: 'stack' },
     e.problems.length ? notice('warn', h('ul', e.problems.map((p) => h('li', p)))) : notice('ok', 'Ready to create a draft or send.'),
-    h('dl', { class: 'kv' }, h('dt', 'From'), h('dd', e.sender || 'default Outlook account'), h('dt', 'To'), h('dd', e.to.join('; ') || '—'), h('dt', 'CC'), h('dd', e.cc.join('; ') || '—'),
+    h('dl', { class: 'kv' }, h('dt', 'From'), h('dd', e.sender || 'default Outlook account'), h('dt', 'To'), h('dd', e.to.join('; ') || 'none'), h('dt', 'CC'), h('dd', e.cc.join('; ') || 'none'),
       h('dt', 'Subject'), h('dd', e.subject), h('dt', 'Attachments'), h('dd', e.attachments.map((a) => `${a.name} (${fmtBytes(a.bytes)})`).join(', ') || 'none'),
       h('dt', 'Total size'), h('dd', `${fmtBytes(e.total_bytes)} (limit ${e.limit_mb} MB)`)),
     h('div', { class: 'copybox' }, e.body),
@@ -306,7 +306,7 @@ function readyFolderDialog(periodId, r) {
     notice('info', 'The ZIP files and email text were copied to the folder below. Attach the ZIP files in your email program (new Outlook, Outlook on the web or classic Outlook), send it, then use "Mark manually completed".'),
     h('div', { class: 'row' }, h('code', { class: 'grow' }, r.folder), copyButton(() => r.folder, 'Copy path'),
       h('button', { class: 'small', onclick: async () => { try { const x = await post(`/api/periods/${periodId}/open-folder`); if (!x.opened) toast('Open this folder in File Explorer on the application computer.'); } catch (e) { showError(e); } } }, 'Open folder')),
-    h('dl', { class: 'kv' }, h('dt', 'To'), h('dd', r.to.join('; ') || '—'), h('dt', 'CC'), h('dd', r.cc.join('; ') || '—'), h('dt', 'Files'), h('dd', r.files.join(', '))),
+    h('dl', { class: 'kv' }, h('dt', 'To'), h('dd', r.to.join('; ') || 'none'), h('dt', 'CC'), h('dd', r.cc.join('; ') || 'none'), h('dt', 'Files'), h('dd', r.files.join(', '))),
     h('div', { class: 'row' }, h('b', { class: 'grow' }, 'Subject'), copyButton(() => r.subject, 'Copy subject')), h('div', { class: 'copybox' }, r.subject),
     h('div', { class: 'row' }, h('b', { class: 'grow' }, 'Body'), copyButton(() => r.body, 'Copy body')), h('div', { class: 'copybox' }, r.body)) });
 }
