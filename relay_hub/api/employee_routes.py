@@ -63,11 +63,16 @@ def list_employees(view: str = "active", search: str = "", location: str = "", e
 def lookup(q: str = Query("", max_length=100), include_left: bool = False,
            principal: Principal = Depends(require("employees.view")), conn=Depends(get_conn)):
     s = f"%{q.strip()}%"
-    where = "(full_name LIKE ? OR rhc_id LIKE ? OR official_email LIKE ?)"
+    params = [s, s]
+    where = "(full_name LIKE ? OR rhc_id LIKE ?"
+    if principal.field_visible("official_email"):
+        where += " OR official_email LIKE ?"
+        params.append(s)
+    where += ")"
     if not include_left:
         where += " AND record_type='directory' AND employment_status != 'Left'"
     items = db.rows(conn, f"SELECT id, rhc_id, full_name, location, employment_status, record_type, current_photo_id "
-                          f"FROM employees WHERE {where} ORDER BY full_name LIMIT 25", (s, s, s))
+                          f"FROM employees WHERE {where} ORDER BY full_name LIMIT 25", params)
     return [i for i in items if principal.location_ok(i["location"])]
 
 

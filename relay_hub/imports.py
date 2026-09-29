@@ -854,6 +854,29 @@ def delete_template(conn, principal: Principal, tid: int) -> None:
         audit.log(conn, principal.label, "import.template_delete", "import_template", tid, f"Deleted template {t['name']}")
 
 
+def cleanup_exports(paths, keep_days: int = 7) -> None:
+    """Remove temporary spreadsheet exports and reports (they are regenerated on demand)."""
+    cutoff = timeutil.now_utc().timestamp() - keep_days * 86400
+    for sub in ("spreadsheets", "reports"):
+        folder = paths.exports / sub
+        if not folder.exists():
+            continue
+        for p in folder.iterdir():
+            try:
+                if p.is_file() and p.stat().st_mtime < cutoff:
+                    p.unlink()
+            except OSError:
+                pass
+    uploads = paths.staging / "uploads"
+    if uploads.exists():
+        for p in uploads.iterdir():
+            try:
+                if p.is_file() and p.stat().st_mtime < timeutil.now_utc().timestamp() - 86400:
+                    p.unlink()
+            except OSError:
+                pass
+
+
 def cleanup_staging(paths, keep_days: int = 60) -> None:
     """Remove abandoned staging files older than keep_days (committed files are kept for audit)."""
     folder = paths.staging / "imports"

@@ -191,6 +191,7 @@ class AppContext:
         finally:
             conn.close()
         imports.cleanup_staging(self.paths)
+        imports.cleanup_exports(self.paths)
         if self.background:
             self.scheduler = Scheduler(self)
             self.scheduler.start()

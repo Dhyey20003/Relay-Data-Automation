@@ -262,6 +262,7 @@ dl.kv dd { margin: 0; word-break: break-word; }
   .nav a { padding: 8px 10px; }
   main { padding: 14px 12px 40px; }
   .profile { grid-template-columns: 1fr; }
+  .pkg-grid { grid-template-columns: 1fr; }
   dl.kv { grid-template-columns: 130px 1fr; }
   .toolbar input[type=search] { width: 100%; }
 }
